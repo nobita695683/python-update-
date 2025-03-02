@@ -75,6 +75,6 @@ def _toggle_landing():
 hotkey = "F5"
 keyboard.add_hotkey(hotkey, toggle_landing, suppress=False, trigger_on_release=False, timeout=0)
 
-# Start GUI
+
 root.mainloop()
 
