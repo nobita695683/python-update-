@@ -62,9 +62,18 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 # Status Label
 label_status = ctk.CTkLabel(root, text="Waiting for action...", text_color="blue")
 label_status.pack(pady=10)
-
-
 
