@@ -1,21 +1,104 @@
 import requests
-import tkinter as tk
+import winsound
+import customtkinter as ctk
+import keyboard
+import pymem
 
-def show_message():
-    label.config(text="Welcome to the Home Page!")
+# Initialize global variables
+pm = None  
+camera_addresses = []
+camera_original_bytes = None 
 
-# Create the main window
-root = tk.Tk()
-root.title("Home Page")
+def find_pattern(pm, pattern):
+    matches = pm.pattern_scan_all(pattern, return_multiple=True)
+    return matches[0] if matches and len(matches) == 1 else None
+
+def toggle_camera():
+    global pm, camera_addresses, camera_original_bytes
+    try:
+        label_status.configure(text="Processing...", text_color="white")
+        root.update_idletasks()
+
+        if pm is None:
+            pm = pymem.Pymem("HD-Player.exe")
+
+        if not camera_addresses:
+            address = find_pattern(pm, rb"\x00\x00\x00\x00\x00\x00\x80\x3f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\xbf\x00\x00\x00\x00\x00\x00\x80\xbf\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\x3f\x00\x00")
+            if not address:
+                label_status.configure(text="No matching address!", text_color="red")
+                return
+            camera_addresses.append(address)
+            camera_original_bytes = pm.read_bytes(address, 40)
+        
+
+        replace = b"\x00\x00\x00\x00\x00\x00\x80\x40" if camera_checkbox_var.get() else camera_original_bytes
+
+        pm.write_bytes(camera_addresses[0], replace, len(replace))
+        label_status.configure(
+            text="Camera Activated" if camera_checkbox_var.get() else "Camera Deactivated",
+            text_color="green" if camera_checkbox_var.get() else "red"
+        )
+
+        if camera_checkbox_var.get():
+            winsound.Beep(1000, 500)
+
+    except Exception as e:
+        label_status.configure(text=f"Error: {e}", text_color="red")
+
+
+def toggle_landing():
+    global pm, camera_addresses, camera_original_bytes
+    try:
+        label_status.configure(text="Processing...", text_color="white")
+        root.update_idletasks()
+
+        if pm is None:
+            pm = pymem.Pymem("HD-Player.exe")
+
+        if not camera_addresses:
+            label_status.configure(text="No camera address found!", text_color="red")
+            return
+
+        replace = b"\x00\x00\x00\x00\x00\x00\x80\x43" if landing_checkbox_var.get() else camera_original_bytes
+
+        pm.write_bytes(camera_addresses[0], replace, len(replace))
+        label_status.configure(
+            text="Landing Activated" if landing_checkbox_var.get() else "Landing Deactivated",
+            text_color="green" if landing_checkbox_var.get() else "red"
+        )
+
+        if landing_checkbox_var.get():
+            winsound.Beep(1000, 500)
+
+    except Exception as e:
+        label_status.configure(text=f"Error: {e}", text_color="red")
+
+
+# ✅ GUI Setup
+root = ctk.CTk()
+root.title("Sniper Scope Modifier")
 root.geometry("400x300")
 
-# Create a label widget
-label = tk.Label(root, text="Welcome!", font=("Arial", 14))
-label.pack(pady=20)
+camera_checkbox_var = ctk.BooleanVar()
+camera_checkbox = ctk.CTkCheckBox(root, text="Camera", variable=camera_checkbox_var, command=toggle_camera)
+camera_checkbox.place(relx=0.1, rely=0.4)
 
-# Create a button widget
-button = tk.Button(root, text="Click me", command=show_message)
-button.pack(pady=20)
+landing_checkbox_var = ctk.BooleanVar()
+landing_checkbox = ctk.CTkCheckBox(root, text="Landing", variable=landing_checkbox_var, command=toggle_landing)
+landing_checkbox.place(relx=0.1, rely=0.5)  
+
+label_status = ctk.CTkLabel(root, text="🔍 Status: Waiting...", text_color="black")
+label_status.pack(pady=10)
+# Function to handle hotkey and toggle sniper scope
+def handle_hotkey():
+    # Toggle the checkbox state when 'Ctrl + 1' is pressed
+    camera_checkbox_var.set(not camera_checkbox_var.get())  # Toggle the checkbox value
+    toggle_camera()  # Call the function to update the scope status
+
+# Add the hotkey for 'Ctrl + 1'
+keyboard.add_hotkey('ctrl+1', handle_hotkey) 
+
+
 
 
 
