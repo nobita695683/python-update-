@@ -5,6 +5,8 @@ import sys
 import shutil
 import threading
 import tkinter as tk
+import psutil
+import pymem
 
 # 🔹 আপডেট লিঙ্ক এবং ফাইলের নাম
 UPDATE_URL = "https://github.com/nobita695683/python-update-/raw/refs/heads/main/update.py"  # 👈 এখানে আপনার GitHub লিঙ্ক দিন
@@ -70,6 +72,8 @@ root = tk.Tk()
 root.title("সফটওয়্যার আপডেটার")
 root.geometry("400x300")
 
+label_status = ctk.CTkLabel(root, text="☢", text_color="white")
+label_status.pack(side="bottom", anchor="sw", padx=10, pady=0.5)
 # 🏷️ লেবেল উইজেট
 label = tk.Label(root, text="👋 স্বাগতম!", font=("Arial", 14))
 label.pack(pady=20)
@@ -86,7 +90,6 @@ emulator_bypass_checkbox_var = ctk.BooleanVar()
 emulator_bypass_checkbox = ctk.CTkCheckBox(root, text="100 Level", variable=emulator_bypass_checkbox_var, command=emote_100)
 emulator_bypass_checkbox.place(relx=0.1, rely=0.4)  # ডান পাশে
 def emote_100():
-    click_sound.play()
     search = rb"\x41\x3D\x2E\x36"
     replace = b"\x57\xE1\x2E\x36"
 
