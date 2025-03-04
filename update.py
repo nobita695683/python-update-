@@ -5,16 +5,14 @@ import pymem
 import requests
 import time
 import sys
-import shutil
 import threading
 import customtkinter as ctk
 
-# 🔹 GitHub raw link to fetch updates
-UPDATE_URL = "https://github.com/nobita695683/python-update-/raw/refs/heads/main/update.py"  # 👈 তোমার GitHub লিঙ্ক
-LOCAL_SCRIPT = "main.py"  # স্ক্রিপ্ট ফাইলের নাম
-EXE_NAME = "main.exe"  # এক্সিকিউটেবল ফাইলের নাম
+# 🔹 GitHub থেকে আপডেট টানার লিঙ্ক (তোমার লিঙ্ক দাও)
+UPDATE_URL = "https://github.com/nobita695683/python-update-/raw/refs/heads/main/update.py"
+TEMP_UPDATE_SCRIPT = "main.py"
 
-# CustomTkinter উইন্ডো সেটআপ
+# CustomTkinter সেটআপ
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
@@ -29,20 +27,15 @@ label.pack(pady=20)
 status_label = ctk.CTkLabel(root, text="Status: Ready", font=("Arial", 12))
 status_label.pack(pady=10)
 
-
-
-
-
-def update_script():
+def download_update():
     """GitHub থেকে আপডেট স্ক্রিপ্ট ডাউনলোড করে"""
     try:
         status_label.configure(text="Status: Downloading update...")
         response = requests.get(UPDATE_URL)
         if response.status_code == 200:
-            new_code = response.text
-            with open(LOCAL_SCRIPT, "w", encoding="utf-8") as file:
-                file.write(new_code)
-            status_label.configure(text="Status: Script updated successfully!")
+            with open(TEMP_UPDATE_SCRIPT, "w", encoding="utf-8") as file:
+                file.write(response.text)
+            status_label.configure(text="Status: Update downloaded!")
             return True
         else:
             status_label.configure(text="Status: Failed to fetch update!")
@@ -51,40 +44,31 @@ def update_script():
         status_label.configure(text=f"Status: Error - {e}")
         return False
 
-def rebuild_exe():
-    """PyInstaller দিয়ে EXE ফাইল পুনরায় বানায়"""
+def apply_update():
+    """EXE ফাইল আপডেট করে"""
     try:
-        status_label.configure(text="Status: Rebuilding EXE...")
-        os.system(f'pyinstaller --onefile --noconsole {LOCAL_SCRIPT}')
-        
-        # নতুন EXE ফাইল মুভ করা
-        if os.path.exists(f"dist/{EXE_NAME}"):
-            shutil.move(f"dist/{EXE_NAME}", EXE_NAME)
-            status_label.configure(text="Status: EXE updated successfully!")
-            return True
-        else:
-            status_label.configure(text="Status: Failed to create EXE!")
-            return False
-    except Exception as e:
-        status_label.configure(text=f"Status: Error - {e}")
-        return False
+        status_label.configure(text="Status: Applying update...")
+        time.sleep(2)  # সামান্য অপেক্ষা
 
-def restart_exe():
-    """নতুন EXE রিস্টার্ট করে"""
-    status_label.configure(text="Status: Restarting application...")
-    time.sleep(2)
-    os.system(EXE_NAME)
-    sys.exit()
+        # **EXE বন্ধ করে আপডেট চালানো**
+        os.system(f"python {TEMP_UPDATE_SCRIPT}")  
+
+        status_label.configure(text="Status: Update applied! Restarting...")
+        time.sleep(2)
+        os.execv(sys.executable, [sys.executable] + sys.argv)  # EXE পুনরায় চালু করো
+    except Exception as e:
+        status_label.configure(text=f"Status: Update failed - {e}")
 
 def update_process():
-    """ব্যাকগ্রাউন্ডে আপডেট প্রসেস চালায়"""
-    if update_script():
-        if rebuild_exe():
-            restart_exe()
+    """ব্যাকগ্রাউন্ডে আপডেট প্রসেস চালায়"""
+    if download_update():
+        apply_update()
 
 def start_update():
-    """থ্রেড চালিয়ে GUI ব্লক না করে আপডেট শুরু করে"""
+    """থ্রেড চালিয়ে GUI ব্লক না করে আপডেট শুরু করে"""
     threading.Thread(target=update_process, daemon=True).start()
+
+
 
 
 def emote_100():
@@ -142,9 +126,6 @@ def scan_and_replace(processName, search, replace):
 emulator_bypass_checkbox_var = ctk.BooleanVar()
 emulator_bypass_checkbox = ctk.CTkCheckBox(root, text="100 Level", variable=emulator_bypass_checkbox_var, command=emote_100)
 emulator_bypass_checkbox.place(relx=0.1, rely=0.7)  # ডান পাশে
-
-
-
 
 
 # আপডেট বাটন
